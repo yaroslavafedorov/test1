@@ -30,8 +30,7 @@ public class EventManagerInstaller : MonoInstaller
         // Сканирует текущую сборку, находит любые классы (например, QuestUIHandler, LootUIHandler),
         // реализующие маркер IEventHandlerMarker, регистрирует их интерфейсы и создает экземпляры как Singletons.
         Container.BindInterfacesAndSelfToAllClassesImplementing<IEventHandlerMarker>()
-            .ToAccountForWindowsStoreExpress() // Обеспечивает совместимость с UWP/IL2CPP компиляцией
-            .AsSingle()
-            .NonLazy(); // NonLazy гарантирует, что конструкторы вызовутся сразу и подписка на брокер активируется
+            .ToAccountForWindowsStoreExpress()
+            .AsSingle();
     }
 }

@@ -14,7 +14,6 @@ public abstract class UIEventHandler<T> : IEventHandler<T>, IDisposable where T 
     protected readonly IUIService UiService;
     private readonly IEventBroker _eventBroker;
     
-    // Потокобезопасная внутренняя очередь для предотвращения стирания UI-событий при лимитах
     private readonly Queue<T> _pendingEvents = new();
     private bool _isProcessingQueue;
 
@@ -23,7 +22,6 @@ public abstract class UIEventHandler<T> : IEventHandler<T>, IDisposable where T 
         UiService = uiService;
         _eventBroker = eventBroker;
         
-        // Автоматическая подписка на брокер событий при создании объекта через Zenject
         _eventBroker.Subscribe<T>(Handle);
     }
 
@@ -40,19 +38,21 @@ public abstract class UIEventHandler<T> : IEventHandler<T>, IDisposable where T 
 
         while (_pendingEvents.Count > 0)
         {
-            var nextEvent = _pendingEvents.Peek();
+            var nextEvent = _pendingEvents.Dequeue();
             
-            // Вызываем абстрактный метод отрисовки конкретного UI элемента
-            bool isDisplayedSuccessfully = await RenderUI(nextEvent);
+            try
+            {
+                bool isDisplayedSuccessfully = await RenderUI(nextEvent);
 
-            if (isDisplayedSuccessfully)
-            {
-                _pendingEvents.Dequeue(); // Удаляем из очереди только при успешном спавне
+                if (!isDisplayedSuccessfully)
+                {
+                    // Если не отрисовалось, логируем ошибку,
+                    UnityEngine.Debug.LogWarning($"[UIEventHandler] Failed to render UI for event {typeof(T).Name}");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Если UI-сервис переполнен, ждем один кадр и пробуем снова (событие не теряется)
-                await UniTask.Yield();
+                UnityEngine.Debug.LogError($"[UIEventHandler] Critical error during RenderUI: {ex.Message}");
             }
         }
 

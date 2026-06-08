@@ -11,9 +11,9 @@ namespace Forestline.Core.EventSystem.Network;
 public struct NetworkEventMessage : NetworkMessage
 {
     /// <summary>
-    /// Хэш или короткое имя типа
+    /// Тип события
     /// </summary>
-    public string EventTypeCode; 
+    public int EventTypeId;
 
     /// <summary>
     /// Сжатые бинарные данные
